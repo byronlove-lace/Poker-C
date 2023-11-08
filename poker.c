@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include<stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
 #define DECK_TOTAL 52
 #define MX_CRD_NAME_LEN 22
+#define MX_VAL_NAME_LEN 5 
 #define HAND_SIZE 5
 #define SUIT_COUNT 4
 #define FACE_CRD_COUNT 3
@@ -16,9 +18,9 @@ const int P2_CASH = 150;
 
 void assemble(const char const *suits[], const char const *faces[], const char const *nums[], char pack[][MX_CRD_NAME_LEN]);
 void shuffle(char pack[DECK_TOTAL][MX_CRD_NAME_LEN]);
-void deal_crd(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *hand_count);
-void deal_phase(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char p1_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p1_hand_count, char p2_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p2_hand_count);
-void read_hands(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_count, char cpu_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int cpu_hand_count);
+void deal_crd(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *hand_count); void deal_phase(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char p1_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p1_hand_count, char p2_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p2_hand_count);
+void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_count); 
+unsigned int eval_crd(char crd[MX_CRD_NAME_LEN], unsigned int hand_count);
 
 int main (void)
 {
@@ -43,6 +45,10 @@ int main (void)
         assemble(SUITS, FACE_CRDS, NUM_CRDS, deck);
         shuffle(deck);
         deal_phase(deck, &top_crd, player_hand, &player_crd_count, cpu_hand, &cpu_crd_count);
+        read_hand(player_hand, player_crd_count);
+        unsigned int crd_val = 0;
+        crd_val = eval_crd(player_hand[1], player_crd_count);
+        printf("%u\n", crd_val);
 }
 
 void mk_crd(const char *val, const char *suit, char *crd)
@@ -150,18 +156,114 @@ void deal_phase(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, c
         }
 }
 
-void read_hands(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_count, char d_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int d_hand_count)
+void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_count) 
 {
         puts("Player: \n");
         for (size_t i = 0; i < p_hand_count; ++i)
         {
                 printf("%s\n", p_hand[i]);
         }
+}
 
-        puts("Dealer: \n");
+unsigned int eval_crd(char crd[MX_CRD_NAME_LEN], unsigned int hand_count) 
+{
+        unsigned int letter_pos = 0;
+        char val_name[MX_VAL_NAME_LEN] = {0};
 
-        for (size_t i = 0; i < d_hand_count; ++i)
+        while (crd[letter_pos] != ' ')
         {
-                printf("%s\n", d_hand[i]);
+                val_name[letter_pos] = crd[letter_pos];
+                ++letter_pos;
+        }
+
+        letter_pos = 0;
+
+
+        if (strcmp(val_name, "Two") == 0)
+        {
+                return 2;
+        }
+
+        if (strcmp(val_name, "Three") == 0)
+        {
+                return 3;
+        }
+
+        if (strcmp(val_name, "Four") == 0)
+        {
+                return 4;
+        }
+
+        if (strcmp(val_name, "Five") == 0)
+        {
+                return 5;
+        }
+
+        if (strcmp(val_name, "Six") == 0)
+        {
+                return 6;
+        }
+
+        if (strcmp(val_name, "Seven") == 0)
+        {
+                return 7;
+        }
+
+        if (strcmp(val_name, "Eight") == 0)
+        {
+                return 8;
+        }
+
+        if (strcmp(val_name, "Nine") == 0)
+        {
+                return 9;
+        }
+
+        if (strcmp(val_name, "Ten") == 0)
+        {
+                return 10;
+        }
+
+        if (strcmp(val_name, "Jack") == 0)
+        {
+                return 11;
+        }
+
+        if (strcmp(val_name, "Queen") == 0)
+        {
+                return 12;
+        }
+
+        if (strcmp(val_name, "King") == 0)
+        {
+                return 13;
+        }
+
+        if (strcmp(val_name, "Ace") == 0)
+        {
+                return 14;
+        }
+
+        // rem memeset(val_name) here
+}
+
+void order_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_count)
+{
+       ; 
+}
+
+void pair_check(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_count)
+{
+        bool has_pair = false;
+
+        for (size_t i = 0; i < HAND_SIZE; ++i)
+        {
+                for (size_t j = 0; j < MX_VAL_NAME_LEN; ++j)
+                {
+                        while (j != '\0')
+                        {
+                                ;
+                        }
+                }
         }
 }
