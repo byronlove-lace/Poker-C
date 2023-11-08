@@ -20,7 +20,8 @@ void assemble(const char const *suits[], const char const *faces[], const char c
 void shuffle(char pack[DECK_TOTAL][MX_CRD_NAME_LEN]);
 void deal_crd(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *hand_count); void deal_phase(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char p1_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p1_hand_count, char p2_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p2_hand_count);
 void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_count); 
-unsigned int eval_crd(char crd[MX_CRD_NAME_LEN], unsigned int hand_count);
+unsigned int eval_crd(char crd[MX_CRD_NAME_LEN]);
+unsigned int eval_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
 
 int main (void)
 {
@@ -34,7 +35,9 @@ int main (void)
         unsigned int top_crd = 0;
 
         char player_hand[HAND_SIZE][MX_CRD_NAME_LEN] = {0};
+        unsigned int player_hand_vals[HAND_SIZE] = {0};
         char cpu_hand [HAND_SIZE][MX_CRD_NAME_LEN] = {0};
+        unsigned int cpu_hand_vals [HAND_SIZE] = {0};
 
         unsigned int player_crd_count = 0;
         unsigned int cpu_crd_count = 0;
@@ -46,9 +49,11 @@ int main (void)
         shuffle(deck);
         deal_phase(deck, &top_crd, player_hand, &player_crd_count, cpu_hand, &cpu_crd_count);
         read_hand(player_hand, player_crd_count);
-        unsigned int crd_val = 0;
-        crd_val = eval_crd(player_hand[1], player_crd_count);
-        printf("%u\n", crd_val);
+        eval_hand(player_hand, player_hand_vals);
+        for (size_t i = 0; i < HAND_SIZE; ++i)
+        {
+                printf("%u\n", player_hand_vals[i]);
+        }
 }
 
 void mk_crd(const char *val, const char *suit, char *crd)
@@ -165,7 +170,7 @@ void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_coun
         }
 }
 
-unsigned int eval_crd(char crd[MX_CRD_NAME_LEN], unsigned int hand_count) 
+unsigned int eval_crd(char crd[MX_CRD_NAME_LEN]) 
 {
         unsigned int letter_pos = 0;
         char val_name[MX_VAL_NAME_LEN] = {0};
@@ -245,6 +250,14 @@ unsigned int eval_crd(char crd[MX_CRD_NAME_LEN], unsigned int hand_count)
         }
 
         // rem memeset(val_name) here
+}
+
+unsigned int eval_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE])
+{
+        for (size_t i = 0; i < HAND_SIZE; ++i)
+        {
+               hand_vals[i] = eval_crd(hand[i]);
+        }
 }
 
 void order_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_count)
