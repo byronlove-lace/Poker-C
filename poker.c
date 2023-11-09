@@ -21,7 +21,9 @@ void shuffle(char pack[DECK_TOTAL][MX_CRD_NAME_LEN]);
 void deal_crd(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *hand_count); void deal_phase(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char p1_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p1_hand_count, char p2_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p2_hand_count);
 void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_count); 
 unsigned int eval_crd(char crd[MX_CRD_NAME_LEN]);
-unsigned int eval_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
+unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
+void sort_hand(unsigned int hand_vals[HAND_SIZE]);
+void dupe_check(unsigned int hand_vals[HAND_SIZE]);
 
 int main (void)
 {
@@ -49,11 +51,14 @@ int main (void)
         shuffle(deck);
         deal_phase(deck, &top_crd, player_hand, &player_crd_count, cpu_hand, &cpu_crd_count);
         read_hand(player_hand, player_crd_count);
-        eval_hand(player_hand, player_hand_vals);
-        for (size_t i = 0; i < HAND_SIZE; ++i)
-        {
-                printf("%u\n", player_hand_vals[i]);
-        }
+
+        eval_crds_in_hand(player_hand, player_hand_vals);
+        sort_hand(player_hand_vals);
+
+        eval_crds_in_hand(cpu_hand, cpu_hand_vals);
+        sort_hand(cpu_hand_vals);
+
+        pair_check(player_hand_vals);
 }
 
 void mk_crd(const char *val, const char *suit, char *crd)
@@ -252,11 +257,30 @@ unsigned int eval_crd(char crd[MX_CRD_NAME_LEN])
         // rem memeset(val_name) here
 }
 
-unsigned int eval_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE])
+unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE])
 {
         for (size_t i = 0; i < HAND_SIZE; ++i)
         {
                hand_vals[i] = eval_crd(hand[i]);
+        }
+}
+
+void sort_hand(unsigned int hand_vals[HAND_SIZE])
+{
+        int n = HAND_SIZE - 2;
+
+        while (n > -1)
+        {
+                unsigned int key = hand_vals[n];
+                unsigned int j = n + 1;
+
+                while (j < HAND_SIZE && hand_vals[j] < key)
+                {
+                        hand_vals[j - 1] = hand_vals[j];
+                        ++j;
+                }
+                hand_vals[j - 1] = key;
+                --n;
         }
 }
 
@@ -265,18 +289,39 @@ void order_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_count)
        ; 
 }
 
-void pair_check(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_count)
+void dupe_check(unsigned int hand_vals[HAND_SIZE])
 {
-        bool has_pair = false;
+        unsigned int dupe_1 = 0;
+        unsigned int dupe_1_count = 0;
+
+        unsigned int dupe_2 = 0;
+        unsigned int dupe_2_count = 0;
 
         for (size_t i = 0; i < HAND_SIZE; ++i)
         {
-                for (size_t j = 0; j < MX_VAL_NAME_LEN; ++j)
-                {
-                        while (j != '\0')
+                for (size_t j = i + 1; j < HAND_SIZE; ++j) 
+                        if (hand_vals[i] == hand_vals[j])
                         {
-                                ;
+                                if (dupe_1 != 0)
+                                {
+                                        dupe_2 = hand_vals[i];
+                                        ++dupe_2_count;
+                                }
+
+                                else
+                                {
+                                        dupe_1 = hand_vals[i];
+                                        ++dupe_1_count;
+                                }
                         }
-                }
         }
+}
+
+void assess_hand(unsigned int hand_vals[HAND_SIZE])
+{
+        bool pair = false;
+        bool two_pair = false;
+        bool three_of_a_kind = false;
+        bool four_of_a_kind = false;
+
 }
