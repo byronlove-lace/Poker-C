@@ -23,7 +23,8 @@ void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_coun
 unsigned int eval_crd(char crd[MX_CRD_NAME_LEN]);
 unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
 void sort_hand(unsigned int hand_vals[HAND_SIZE]);
-void dupe_check(unsigned int hand_vals[HAND_SIZE]);
+
+void assess_hand(unsigned int hand_vals[HAND_SIZE]);
 
 int main (void)
 {
@@ -58,7 +59,7 @@ int main (void)
         eval_crds_in_hand(cpu_hand, cpu_hand_vals);
         sort_hand(cpu_hand_vals);
 
-        pair_check(player_hand_vals);
+        assess_hand(player_hand_vals);
 }
 
 void mk_crd(const char *val, const char *suit, char *crd)
@@ -284,44 +285,142 @@ void sort_hand(unsigned int hand_vals[HAND_SIZE])
         }
 }
 
-void order_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_count)
+void assess_hand(unsigned int hand_vals[HAND_SIZE])
 {
-       ; 
-}
+        void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count);
 
-void dupe_check(unsigned int hand_vals[HAND_SIZE])
-{
-        unsigned int dupe_1 = 0;
-        unsigned int dupe_1_count = 0;
+        bool straight_check(unsigned int hand_vals[HAND_SIZE], unsigned int *straight_end_crd);
 
-        unsigned int dupe_2 = 0;
-        unsigned int dupe_2_count = 0;
+        unsigned int first_duplicate = hand_vals[0];
+        unsigned int first_duplicate_count = 1;
+
+        unsigned int second_duplicate = 0;
+        unsigned int second_duplicate_count = 0;
+
+        unsigned int highest_straight_crd = 0;
+
+        bool pair = false;
+        bool two_pair = false;
+        bool three_of_a_kind = false;
+        bool straight = false;
+        // comp 2 straights: only need the highest/lowest num to compare 
+        bool flush = false;
+        bool full_house = false;
+        bool four_of_a_kind = false;
+        bool straight_flush = false;
+        bool royal_flush = false;
+
+        dupe_check(hand_vals, &first_duplicate, &first_duplicate_count, &second_duplicate, &second_duplicate_count);
+
+        // dupes can be (3 / 2) or (2 / 3)
+        if (first_duplicate_count == 2 || second_duplicate_count == 2)
+        {
+                pair = true;
+        }
+
+        if (first_duplicate_count == 2 && second_duplicate_count == 2)
+        {
+                two_pair = true;
+        }
+
+        if (first_duplicate_count == 3 || second_duplicate_count == 3)
+        {
+                three_of_a_kind = true;
+        }
+
+        if (first_duplicate_count == 4 || second_duplicate_count == 4)
+        {
+                four_of_a_kind = true;
+        }
+
+        straight = straight_check(hand_vals, &highest_straight_crd);
+
+        // flush_code: rough draft
+        // can find suits for flush with 'f' from 'of SuitName'
+
+        size_t letter_pos = 0;
 
         for (size_t i = 0; i < HAND_SIZE; ++i)
         {
-                for (size_t j = i + 1; j < HAND_SIZE; ++j) 
-                        if (hand_vals[i] == hand_vals[j])
+                while (hand[i][letter_pos] != '\0')
+                {
+                        ++letter_pos;
+                        // CONTINUE
+                }
+        }
+}
+
+void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count)
+{
+
+        for (size_t i = 1; i < HAND_SIZE; ++i)
+        {
+                if (*dupe_1_count > 1)
+                {
+                        if (*dupe_2_count > 0)
                         {
-                                if (dupe_1 != 0)
+                                if (*dupe_2 == hand_vals[i])
                                 {
-                                        dupe_2 = hand_vals[i];
-                                        ++dupe_2_count;
+                                        ++*dupe_2_count;
+                                }
+                        }
+
+                        else
+                        {
+                                if (*dupe_1 == hand_vals[i])
+                                {
+                                        ++*dupe_1_count;
                                 }
 
                                 else
                                 {
-                                        dupe_1 = hand_vals[i];
-                                        ++dupe_1_count;
+                                        *dupe_2 = hand_vals[i];
+                                        ++*dupe_2_count;
                                 }
                         }
+                }
+
+                if (*dupe_1_count < 2)
+                {
+                        if (*dupe_1 == hand_vals[i])
+                        {
+                                ++*dupe_1_count;
+                        }
+
+                        else
+                        {
+                                *dupe_1 = hand_vals[i];
+                        }
+                }
+
+        }
+                printf("DUPLICATE 1: %u\nCOUNT: %u\n", *dupe_1, *dupe_1_count);
+                printf("DUPLICATE 2: %u\nCOUNT: %u\n", *dupe_2, *dupe_2_count);
+}
+
+bool straight_check(unsigned int hand_vals[HAND_SIZE], unsigned int *straight_end_crd)
+{
+        unsigned int previous_crd = hand_vals[0];
+        unsigned int straight_count = 1;
+
+        for (size_t i = 1; i < HAND_SIZE; ++i)
+        {
+                if (hand_vals[i] == ++previous_crd)
+                {
+                        ++straight_count;
+                        previous_crd = hand_vals[i];
+                }
+        }
+
+        if (straight_count == 5)
+        {
+                *straight_end_crd = hand_vals[HAND_SIZE];
+                return true;
+        }
+        else
+        {
+                return false;
         }
 }
+        
 
-void assess_hand(unsigned int hand_vals[HAND_SIZE])
-{
-        bool pair = false;
-        bool two_pair = false;
-        bool three_of_a_kind = false;
-        bool four_of_a_kind = false;
-
-}
