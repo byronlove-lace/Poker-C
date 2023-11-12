@@ -3,10 +3,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <regex.h>
 
 #define DECK_TOTAL 52
 #define MX_CRD_NAME_LEN 22
-#define MX_VAL_NAME_LEN 5 
+#define MX_VAL_NAME_LEN 6 
+#define MX_SUIT_NAME_LEN 9 
 #define HAND_SIZE 5
 #define SUIT_COUNT 4
 #define FACE_CRD_COUNT 3
@@ -23,8 +25,7 @@ void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_coun
 unsigned int eval_crd(char crd[MX_CRD_NAME_LEN]);
 unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
 void sort_hand(unsigned int hand_vals[HAND_SIZE]);
-
-void assess_hand(unsigned int hand_vals[HAND_SIZE]);
+void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
 
 int main (void)
 {
@@ -59,7 +60,7 @@ int main (void)
         eval_crds_in_hand(cpu_hand, cpu_hand_vals);
         sort_hand(cpu_hand_vals);
 
-        assess_hand(player_hand_vals);
+        assess_hand(player_hand, player_hand_vals);
 }
 
 void mk_crd(const char *val, const char *suit, char *crd)
@@ -285,11 +286,14 @@ void sort_hand(unsigned int hand_vals[HAND_SIZE])
         }
 }
 
-void assess_hand(unsigned int hand_vals[HAND_SIZE])
+
+void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE])
 {
         void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count);
 
         bool straight_check(unsigned int hand_vals[HAND_SIZE], unsigned int *straight_end_crd);
+        bool flush_check(char hand[HAND_SIZE][MX_CRD_NAME_LEN]);
+
 
         unsigned int first_duplicate = hand_vals[0];
         unsigned int first_duplicate_count = 1;
@@ -298,6 +302,8 @@ void assess_hand(unsigned int hand_vals[HAND_SIZE])
         unsigned int second_duplicate_count = 0;
 
         unsigned int highest_straight_crd = 0;
+
+        char flush_suit[MX_SUIT_NAME_LEN] = {0};
 
         bool pair = false;
         bool two_pair = false;
@@ -334,20 +340,8 @@ void assess_hand(unsigned int hand_vals[HAND_SIZE])
         }
 
         straight = straight_check(hand_vals, &highest_straight_crd);
-
-        // flush_code: rough draft
-        // can find suits for flush with 'f' from 'of SuitName'
-
-        size_t letter_pos = 0;
-
-        for (size_t i = 0; i < HAND_SIZE; ++i)
-        {
-                while (hand[i][letter_pos] != '\0')
-                {
-                        ++letter_pos;
-                        // CONTINUE
-                }
-        }
+        flush = flush_check(hand);
+        // highest crd can be calcd regardless of straight/flush; simply calc_high_crd func: applies for multiple;
 }
 
 void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count)
@@ -422,5 +416,62 @@ bool straight_check(unsigned int hand_vals[HAND_SIZE], unsigned int *straight_en
                 return false;
         }
 }
-        
+
+bool flush_check(char hand[HAND_SIZE][MX_CRD_NAME_LEN])
+{
+        void get_suit(char crd[MX_CRD_NAME_LEN], char suit[MX_SUIT_NAME_LEN]);
+
+        unsigned int flush_count = 0;
+
+        char first_suit[MX_SUIT_NAME_LEN] = {0};
+        char second_suit[MX_SUIT_NAME_LEN] = {0};
+        char third_suit[MX_SUIT_NAME_LEN] = {0};
+        char fourth_suit[MX_SUIT_NAME_LEN] = {0};
+        char fifth_suit[MX_SUIT_NAME_LEN] = {0};
+
+        char *hand_suit[HAND_SIZE] = {first_suit, second_suit, third_suit, fourth_suit, fifth_suit};
+
+        for (size_t i = 0; i < HAND_SIZE; ++i)
+        {
+                get_suit(hand[i], hand_suit[i]);
+
+                printf("%d\n", i);
+                printf("%s\n", hand_suit[i]);
+
+                if (hand_suit[i] == hand_suit[0])
+                {
+                        ++flush_count; 
+                }
+        }
+
+        if (flush_count == 5)
+        {
+                return true;
+        }
+
+        else 
+        {
+                return false;
+        }
+}
+
+void get_suit(char crd[MX_CRD_NAME_LEN], char suit[MX_SUIT_NAME_LEN])
+{
+        size_t inp_letter_pos = 0;
+        size_t outp_letter_pos = 0;
+
+        while (crd[inp_letter_pos] != 'f')
+        {
+                ++inp_letter_pos;
+        }
+
+        inp_letter_pos += 2;
+
+        while (crd[inp_letter_pos] != '\0')
+        {
+                suit[outp_letter_pos] = crd[inp_letter_pos];
+                ++inp_letter_pos;
+                ++outp_letter_pos;
+        }
+}
 
