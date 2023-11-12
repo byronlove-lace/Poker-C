@@ -23,9 +23,9 @@ void shuffle(char pack[DECK_TOTAL][MX_CRD_NAME_LEN]);
 void deal_crd(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *hand_count); void deal_phase(char pack[DECK_TOTAL][MX_CRD_NAME_LEN], unsigned int *nxt_crd, char p1_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p1_hand_count, char p2_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int *p2_hand_count);
 void read_hand(char p_hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int p_hand_count); 
 unsigned int eval_crd(char crd[MX_CRD_NAME_LEN]);
-unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
-void sort_hand(unsigned int hand_vals[HAND_SIZE]);
-void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE]);
+unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int crd_vals[HAND_SIZE]);
+void sort_hand(unsigned int crd_vals[HAND_SIZE]);
+float assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int crd_vals[HAND_SIZE]);
 
 int main (void)
 {
@@ -39,28 +39,32 @@ int main (void)
         unsigned int top_crd = 0;
 
         char player_hand[HAND_SIZE][MX_CRD_NAME_LEN] = {0};
-        unsigned int player_hand_vals[HAND_SIZE] = {0};
-        char cpu_hand [HAND_SIZE][MX_CRD_NAME_LEN] = {0};
-        unsigned int cpu_hand_vals [HAND_SIZE] = {0};
-
+        unsigned int player_crd_vals[HAND_SIZE] = {0};
         unsigned int player_crd_count = 0;
-        unsigned int cpu_crd_count = 0;
+        float player_hand_value = 0;
 
-        unsigned int player_hand_val = 0;
-        unsigned int cpu_hand_val = 0;
+        char cpu_hand [HAND_SIZE][MX_CRD_NAME_LEN] = {0};
+        unsigned int cpu_crd_vals [HAND_SIZE] = {0};
+        unsigned int cpu_crd_count = 0;
+        float cpu_hand_value = 0;
+
+
 
         assemble(SUITS, FACE_CRDS, NUM_CRDS, deck);
         shuffle(deck);
         deal_phase(deck, &top_crd, player_hand, &player_crd_count, cpu_hand, &cpu_crd_count);
         read_hand(player_hand, player_crd_count);
 
-        eval_crds_in_hand(player_hand, player_hand_vals);
-        sort_hand(player_hand_vals);
+        eval_crds_in_hand(player_hand, player_crd_vals);
+        sort_hand(player_crd_vals);
 
-        eval_crds_in_hand(cpu_hand, cpu_hand_vals);
-        sort_hand(cpu_hand_vals);
+        eval_crds_in_hand(cpu_hand, cpu_crd_vals);
+        sort_hand(cpu_crd_vals);
 
-        assess_hand(player_hand, player_hand_vals);
+        player_hand_value = assess_hand(player_hand, player_crd_vals);
+        cpu_hand_value = assess_hand(cpu_hand, cpu_crd_vals);
+        printf("PLAYER: %.2f\n", player_hand_value);
+        printf("CPU: %.2f\n", cpu_hand_value);
 }
 
 void mk_crd(const char *val, const char *suit, char *crd)
@@ -95,7 +99,7 @@ void mk_crd(const char *val, const char *suit, char *crd)
 void assemble(const char const *suits[], const char const *faces[], const char const *nums[], char pack[DECK_TOTAL][MX_CRD_NAME_LEN])
 {
         void mk_crd(const char *val, const char *suit, char *crd);
-        char current_card[MX_CRD_NAME_LEN];  
+        char current_crd[MX_CRD_NAME_LEN];  
 
         unsigned int pos = 0;
 
@@ -103,15 +107,15 @@ void assemble(const char const *suits[], const char const *faces[], const char c
         {
                 for (size_t n = 0; n < NUM_CRD_COUNT; ++n)
                 {
-                        mk_crd(nums[n], suits[s], current_card);
-                        strcpy(pack[pos], current_card);
+                        mk_crd(nums[n], suits[s], current_crd);
+                        strcpy(pack[pos], current_crd);
                         ++pos;
                 }
 
                 for (size_t f = 0; f < FACE_CRD_COUNT; ++f)
                 {
-                        mk_crd(faces[f], suits[s], current_card);
-                        strcpy(pack[pos], current_card);
+                        mk_crd(faces[f], suits[s], current_crd);
+                        strcpy(pack[pos], current_crd);
                         ++pos;
                 }
         }
@@ -120,15 +124,15 @@ void assemble(const char const *suits[], const char const *faces[], const char c
         {
                 for (int f = (FACE_CRD_COUNT - 1); f >= 0; --f)
                 {
-                        mk_crd(faces[f], suits[s], current_card);
-                        strcpy(pack[pos], current_card);
+                        mk_crd(faces[f], suits[s], current_crd);
+                        strcpy(pack[pos], current_crd);
                         ++pos;
                 }
 
                 for (int n = (NUM_CRD_COUNT - 1); n >= 0; --n)
                 {
-                        mk_crd(nums[n], suits[s], current_card);
-                        strcpy(pack[pos], current_card);
+                        mk_crd(nums[n], suits[s], current_crd);
+                        strcpy(pack[pos], current_crd);
                         ++pos;
                 }
         }
@@ -138,16 +142,16 @@ void assemble(const char const *suits[], const char const *faces[], const char c
 void shuffle(char pack[DECK_TOTAL][MX_CRD_NAME_LEN])
 {
         int r; 
-        char rand_card[MX_CRD_NAME_LEN];  
-        char hold_card[MX_CRD_NAME_LEN];  
+        char rand_crd[MX_CRD_NAME_LEN];  
+        char hold_crd[MX_CRD_NAME_LEN];  
 
        for (size_t i = 0; i < DECK_TOTAL; ++i) 
                {
                        r = rand() % DECK_TOTAL;
-                       strcpy(rand_card, pack[r]);
-                       strcpy(hold_card, pack[i]);
-                       strcpy(pack[i], rand_card);
-                       strcpy(pack[r], hold_card);
+                       strcpy(rand_crd, pack[r]);
+                       strcpy(hold_crd, pack[i]);
+                       strcpy(pack[i], rand_crd);
+                       strcpy(pack[r], hold_crd);
                }
 }
 
@@ -259,42 +263,43 @@ unsigned int eval_crd(char crd[MX_CRD_NAME_LEN])
         // rem memeset(val_name) here
 }
 
-unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE])
+unsigned int eval_crds_in_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int crd_vals[HAND_SIZE])
 {
         for (size_t i = 0; i < HAND_SIZE; ++i)
         {
-               hand_vals[i] = eval_crd(hand[i]);
+               crd_vals[i] = eval_crd(hand[i]);
         }
 }
 
-void sort_hand(unsigned int hand_vals[HAND_SIZE])
+void sort_hand(unsigned int crd_vals[HAND_SIZE])
 {
         int n = HAND_SIZE - 2;
 
         while (n > -1)
         {
-                unsigned int key = hand_vals[n];
+                unsigned int key = crd_vals[n];
                 unsigned int j = n + 1;
 
-                while (j < HAND_SIZE && hand_vals[j] < key)
+                while (j < HAND_SIZE && crd_vals[j] < key)
                 {
-                        hand_vals[j - 1] = hand_vals[j];
+                        crd_vals[j - 1] = crd_vals[j];
                         ++j;
                 }
-                hand_vals[j - 1] = key;
+                crd_vals[j - 1] = key;
                 --n;
         }
 }
 
 
-void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE])
+float assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int crd_vals[HAND_SIZE])
 {
-        unsigned int get_high_card(unsigned int hand_vals[HAND_SIZE]);
-        void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count);
-        bool straight_check(unsigned int hand_vals[HAND_SIZE]);
+        void dupe_check(unsigned int crd_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count);
+        bool straight_check(unsigned int crd_vals[HAND_SIZE]);
         bool flush_check(char hand[HAND_SIZE][MX_CRD_NAME_LEN]);
 
-        unsigned int first_duplicate = hand_vals[0];
+        float hand_value = 0;
+
+        unsigned int first_duplicate = crd_vals[0];
         unsigned int first_duplicate_count = 1;
 
         unsigned int second_duplicate = 0;
@@ -312,9 +317,9 @@ void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[H
         bool straight_flush = false;
         bool royal_flush = false;
 
-        unsigned int high_crd = hand_vals[HAND_SIZE - 1];
+        float high_crd = crd_vals[HAND_SIZE - 1];
 
-        dupe_check(hand_vals, &first_duplicate, &first_duplicate_count, &second_duplicate, &second_duplicate_count);
+        dupe_check(crd_vals, &first_duplicate, &first_duplicate_count, &second_duplicate, &second_duplicate_count);
 
         if (first_duplicate_count == 2 || second_duplicate_count == 2)
         {
@@ -331,7 +336,7 @@ void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[H
                 three_of_a_kind = true;
         }
 
-        straight = straight_check(hand_vals);
+        straight = straight_check(crd_vals);
         flush = flush_check(hand);
         
         if (three_of_a_kind == true && pair == true)
@@ -349,10 +354,52 @@ void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[H
                 straight_flush = true;
         }
 
-        // highest crd can be calcd regardless of straight/flush; simply calc_high_crd func: applies for multiple;
+        if (straight_flush == true)
+        {
+                hand_value += 8;
+        }
+
+        else if (four_of_a_kind == true)
+        {
+                hand_value += 7;
+        }
+
+        else if (full_house == true)
+        {
+                hand_value += 6;
+        }
+
+        else if (flush == true)
+        {
+                hand_value += 5;
+        }
+
+        else if (straight == true)
+        {
+                hand_value += 4;
+        }
+
+        else if (three_of_a_kind == true)
+        {
+                hand_value += 3;
+        }
+
+        else if (two_pair == true)
+        {
+                hand_value += 2;
+        }
+
+        else if (pair == true)
+        {
+                hand_value += 1;
+        }
+
+        hand_value += (high_crd / 100);
+
+        return hand_value;
 }
 
-void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count)
+void dupe_check(unsigned int crd_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count)
 {
 
         for (size_t i = 1; i < HAND_SIZE; ++i)
@@ -361,7 +408,7 @@ void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigne
                 {
                         if (*dupe_2_count > 0)
                         {
-                                if (*dupe_2 == hand_vals[i])
+                                if (*dupe_2 == crd_vals[i])
                                 {
                                         ++*dupe_2_count;
                                 }
@@ -369,14 +416,14 @@ void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigne
 
                         else
                         {
-                                if (*dupe_1 == hand_vals[i])
+                                if (*dupe_1 == crd_vals[i])
                                 {
                                         ++*dupe_1_count;
                                 }
 
                                 else
                                 {
-                                        *dupe_2 = hand_vals[i];
+                                        *dupe_2 = crd_vals[i];
                                         ++*dupe_2_count;
                                 }
                         }
@@ -384,33 +431,31 @@ void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigne
 
                 if (*dupe_1_count < 2)
                 {
-                        if (*dupe_1 == hand_vals[i])
+                        if (*dupe_1 == crd_vals[i])
                         {
                                 ++*dupe_1_count;
                         }
 
                         else
                         {
-                                *dupe_1 = hand_vals[i];
+                                *dupe_1 = crd_vals[i];
                         }
                 }
 
         }
-                printf("DUPLICATE 1: %u\nCOUNT: %u\n", *dupe_1, *dupe_1_count);
-                printf("DUPLICATE 2: %u\nCOUNT: %u\n", *dupe_2, *dupe_2_count);
 }
 
-bool straight_check(unsigned int hand_vals[HAND_SIZE]) 
+bool straight_check(unsigned int crd_vals[HAND_SIZE]) 
 {
-        unsigned int previous_crd = hand_vals[0];
+        unsigned int previous_crd = crd_vals[0];
         unsigned int straight_count = 1;
 
         for (size_t i = 1; i < HAND_SIZE; ++i)
         {
-                if (hand_vals[i] == ++previous_crd)
+                if (crd_vals[i] == ++previous_crd)
                 {
                         ++straight_count;
-                        previous_crd = hand_vals[i];
+                        previous_crd = crd_vals[i];
                 }
         }
 
@@ -441,9 +486,6 @@ bool flush_check(char hand[HAND_SIZE][MX_CRD_NAME_LEN])
         for (size_t i = 0; i < HAND_SIZE; ++i)
         {
                 get_suit(hand[i], hand_suit[i]);
-
-                printf("%d\n", i);
-                printf("%s\n", hand_suit[i]);
 
                 if (hand_suit[i] == hand_suit[0])
                 {
