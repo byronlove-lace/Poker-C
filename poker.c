@@ -289,11 +289,10 @@ void sort_hand(unsigned int hand_vals[HAND_SIZE])
 
 void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[HAND_SIZE])
 {
+        unsigned int get_high_card(unsigned int hand_vals[HAND_SIZE]);
         void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigned int *dupe_1_count, unsigned int *dupe_2, unsigned int *dupe_2_count);
-
-        bool straight_check(unsigned int hand_vals[HAND_SIZE], unsigned int *straight_end_crd);
+        bool straight_check(unsigned int hand_vals[HAND_SIZE]);
         bool flush_check(char hand[HAND_SIZE][MX_CRD_NAME_LEN]);
-
 
         unsigned int first_duplicate = hand_vals[0];
         unsigned int first_duplicate_count = 1;
@@ -301,24 +300,22 @@ void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[H
         unsigned int second_duplicate = 0;
         unsigned int second_duplicate_count = 0;
 
-        unsigned int highest_straight_crd = 0;
-
         char flush_suit[MX_SUIT_NAME_LEN] = {0};
 
         bool pair = false;
         bool two_pair = false;
         bool three_of_a_kind = false;
         bool straight = false;
-        // comp 2 straights: only need the highest/lowest num to compare 
         bool flush = false;
         bool full_house = false;
         bool four_of_a_kind = false;
         bool straight_flush = false;
         bool royal_flush = false;
 
+        unsigned int high_crd = hand_vals[HAND_SIZE - 1];
+
         dupe_check(hand_vals, &first_duplicate, &first_duplicate_count, &second_duplicate, &second_duplicate_count);
 
-        // dupes can be (3 / 2) or (2 / 3)
         if (first_duplicate_count == 2 || second_duplicate_count == 2)
         {
                 pair = true;
@@ -334,13 +331,24 @@ void assess_hand(char hand[HAND_SIZE][MX_CRD_NAME_LEN], unsigned int hand_vals[H
                 three_of_a_kind = true;
         }
 
+        straight = straight_check(hand_vals);
+        flush = flush_check(hand);
+        
+        if (three_of_a_kind == true && pair == true)
+        {
+                full_house = true;
+        }
+
         if (first_duplicate_count == 4 || second_duplicate_count == 4)
         {
                 four_of_a_kind = true;
         }
 
-        straight = straight_check(hand_vals, &highest_straight_crd);
-        flush = flush_check(hand);
+        if (straight == true && flush == true)
+        {
+                straight_flush = true;
+        }
+
         // highest crd can be calcd regardless of straight/flush; simply calc_high_crd func: applies for multiple;
 }
 
@@ -392,7 +400,7 @@ void dupe_check(unsigned int hand_vals[HAND_SIZE], unsigned int *dupe_1, unsigne
                 printf("DUPLICATE 2: %u\nCOUNT: %u\n", *dupe_2, *dupe_2_count);
 }
 
-bool straight_check(unsigned int hand_vals[HAND_SIZE], unsigned int *straight_end_crd)
+bool straight_check(unsigned int hand_vals[HAND_SIZE]) 
 {
         unsigned int previous_crd = hand_vals[0];
         unsigned int straight_count = 1;
@@ -408,7 +416,6 @@ bool straight_check(unsigned int hand_vals[HAND_SIZE], unsigned int *straight_en
 
         if (straight_count == 5)
         {
-                *straight_end_crd = hand_vals[HAND_SIZE];
                 return true;
         }
         else
