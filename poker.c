@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <regex.h>
 
 #define DECK_TOTAL 52
 #define MX_CRD_NAME_LEN 22
@@ -447,23 +446,14 @@ void dupe_check(unsigned int crd_vals[HAND_SIZE], unsigned int *dupe_1, unsigned
 
 bool straight_check(unsigned int crd_vals[HAND_SIZE]) 
 {
-        unsigned int previous_crd = crd_vals[0];
-        unsigned int straight_count = 1;
+        unsigned int first_crd = crd_vals[0];
 
-        for (size_t i = 1; i < HAND_SIZE; ++i)
-        {
-                if (crd_vals[i] == ++previous_crd)
-                {
-                        ++straight_count;
-                        previous_crd = crd_vals[i];
-                }
-        }
-
-        if (straight_count == 5)
+        if (crd_vals[HAND_SIZE - 1] == first_crd + (HAND_SIZE - 1))
         {
                 return true;
         }
-        else
+
+        if (crd_vals[HAND_SIZE - 1] == first_crd + 5) 
         {
                 return false;
         }
